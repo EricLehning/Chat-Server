@@ -4,7 +4,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 import openai 
 
-openai_api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
 
@@ -22,49 +22,11 @@ class HandleRequests(BaseHTTPRequestHandler):
 
     # Here's a method on the class that overrides the parent's method.
     # It handles any GET request.
-    def do_GET(self):
-        """Doc string
-        """
-        # self._set_headers(200)
-        response = {}  # Default response
 
-        # Parse the URL and capture the tuple that is returned
-        (resource, id) = self.parse_url(self.path)
+    # def do_GET(self):
+        # """Doc string
+        # """
 
-        if resource == "animals":
-            if id is not None:
-                response = get_single_animal(id)
-
-            else:
-                response = get_all_animals()
-
-        if resource == "locations":
-            if id is not None:
-                response = get_single_location(id)
-
-            else:
-                response = get_all_locations()
-
-        if resource == "employees":
-            if id is not None:
-                response = get_single_employee(id)
-
-            else:
-                response = get_all_employees()
-
-        if resource == "customers":
-            if id is not None:
-                response = get_single_customer(id)
-
-            else:
-                response = get_all_customers()
-
-        if response is None:
-            self._set_headers(404)
-        else:
-            self._set_headers(200)
-
-        self.wfile.write(json.dumps(response).encode())
 
 
     # Here's a method on the class that overrides the parent's method.
@@ -72,110 +34,32 @@ class HandleRequests(BaseHTTPRequestHandler):
     def do_POST(self):
         """Doc string
         """
-        # self._set_headers(201)
-        content_len = int(self.headers.get('content-length', 0))
-        post_body = self.rfile.read(content_len)
-
-        # Convert JSON string to a Python dictionary
-        post_body = json.loads(post_body)
-
-        # Parse the URL
         (resource, id) = self.parse_url(self.path)
 
-        # Initialize new animal
-        new_animal = None
+        if resource == "chat":
 
-        # Add a new animal to the list. Don't worry about
-        # the orange squiggle, you'll define the create_animal
-        # function next.
-        if resource == "animals":
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",
+                messages=[
+                {"role": "system", "content": "You are a chatbot"},
+                {"role": "user", "content": "Why hasn't toilet paper changed in 100 years?"},
+                ])
 
-            if "name" in post_body and "species" in post_body and "locationId" in post_body and "customerId" in post_body and "status" in post_body:
-                self._set_headers(201)
-                new_animal = create_animal(post_body)
-                self.wfile.write(json.dumps(new_animal).encode())
-            else:
-                self._set_headers(400)
-                new_animal = {
-                "message": 
-                f'''{"name is required" if "name" not in post_body else ""} 
-                {"species is required" if "species" not in post_body else ""}
-                {"locationId is required" if "locationId" not in post_body else ""}
-                {"customerId is required" if "customerId" not in post_body else ""}
-                {"status is required" if "status" not in post_body else ""}'''
-                }
-                self.wfile.write(json.dumps(new_animal).encode())
-        if resource == "locations":
+        result = ''
+        for choice in response.choices:
+            result += choice.message.content
 
-            if "name" in post_body and "address" in post_body:
-                self._set_headers(201)
-                new_location = create_location(post_body)
-                self.wfile.write(json.dumps(new_location).encode())
-            else:
-                self._set_headers(400)
-                new_location = {
-                "message": 
-                f'''{"name is required" if "name" not in post_body else ""} 
-                {"address is required" if "address" not in post_body else ""}'''
-                }
-                self.wfile.write(json.dumps(new_location).encode())
-        if resource == "employees":
+        print(result)
 
-            if "name" in post_body:
-                self._set_headers(201)
-                new_employee = create_employee(post_body)
-                self.wfile.write(json.dumps(new_employee).encode())
-            else:
-                self._set_headers(400)
-                new_employee = {
-                "message": 
-                f'''{"name is required" if "name" not in post_body else ""}'''
-                }
-                self.wfile.write(json.dumps(new_employee).encode())
-        if resource == "customers":
-            
-            if "name" in post_body:
-                self._set_headers(201)
-                new_customer = create_customer(post_body)
-                self.wfile.write(json.dumps(new_customer).encode())
-            else:
-                self._set_headers(400)
-                new_customer = {
-                "message": 
-                f'''{"name is required" if "name" not in post_body else ""}'''
-                }
-                self.wfile.write(json.dumps(new_customer).encode())
 
 
         # Encode the new animal and send in response
 
 
     # A method that handles any PUT request.
-    def do_PUT(self):
-        """Doc string
-        """
-        self._set_headers(204)
-        content_len = int(self.headers.get('content-length', 0))
-        post_body = self.rfile.read(content_len)
-        post_body = json.loads(post_body)
-
-        # Parse the URL
-        (resource, id) = self.parse_url(self.path)
-
-        # Delete a single animal from the list
-        if resource == "animals":
-            update_animal(id, post_body)
-            # Encode the new animal and send in response
-
-        if resource == "locations":
-            update_location(id, post_body)
-
-        if resource == "employees":
-            update_employee(id, post_body)
-
-        if resource == "customers":
-            update_customer(id, post_body)
-        self.wfile.write("".encode())
+    # def do_PUT(self):
+    #     """Doc string
+    #     """
 
     def _set_headers(self, status):
         # Notice this Docstring also includes information about the arguments passed to the function
@@ -225,37 +109,10 @@ class HandleRequests(BaseHTTPRequestHandler):
 
         return (resource, id)  # This is a tuple
 
-    def do_DELETE(self):
-        """Doc string
-        """
-    # Set a 204 response code
-        
+    # def do_DELETE(self):
+    #     """Doc string
+    #     """
 
-    # Parse the URL
-        (resource, id) = self.parse_url(self.path)
-
-    # Delete a single animal from the list
-        if resource == "animals":
-            delete_animal(id)
-            # Encode the new animal and send in response
-            self._set_headers(204)
-            self.wfile.write("".encode())
-
-        if resource == "locations":
-            delete_location(id)
-            self._set_headers(204)
-            self.wfile.write("".encode())
-
-        if resource == "employees":
-            delete_employee(id)
-            self._set_headers(204)
-            self.wfile.write("".encode())
-
-        if resource == "customers":
-            # delete_customer(id)]
-            self._set_headers(405)
-            message = {"message": "Action not supported."}
-            self.wfile.write(json.dumps(message).encode())
 
 
 
