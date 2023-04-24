@@ -2,10 +2,9 @@ import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 import os
-import openai 
+import openai
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
-
 
 
 # Here's a class. It inherits from another class.
@@ -15,8 +14,7 @@ openai.api_key = os.getenv("OPENAI_API_KEY")
 class HandleRequests(BaseHTTPRequestHandler):
     # This is a Docstring it should be at the beginning of all classes and functions
     # It gives a description of the class or function
-    """Controls the functionality of any GET, PUT, POST, DELETE requests to the server
-    """
+    """Controls the functionality of any GET, PUT, POST, DELETE requests to the server"""
 
     # Here's a class function
 
@@ -24,37 +22,34 @@ class HandleRequests(BaseHTTPRequestHandler):
     # It handles any GET request.
 
     # def do_GET(self):
-        # """Doc string
-        # """
-
-
+    # """Doc string
+    # """
 
     # Here's a method on the class that overrides the parent's method.
     # It handles any POST request.
     def do_POST(self):
-        """Doc string
-        """
+        """Doc string"""
         (resource, id) = self.parse_url(self.path)
 
         if resource == "chat":
-
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                {"role": "system", "content": "You are a chatbot"},
-                {"role": "user", "content": "Why hasn't toilet paper changed in 100 years?"},
-                ])
+                    {"role": "system", "content": "You are a chatbot"},
+                    {
+                        "role": "user",
+                        "content": "Why hasn't toilet paper changed in 100 years?",
+                    },
+                ],
+            )
 
-        result = ''
+        result = ""
         for choice in response.choices:
             result += choice.message.content
-
-        print(result)
-
-
+        self._set_headers(200)
+        self.wfile.write(json.dumps(result).encode())
 
         # Encode the new animal and send in response
-
 
     # A method that handles any PUT request.
     # def do_PUT(self):
@@ -70,25 +65,23 @@ class HandleRequests(BaseHTTPRequestHandler):
             status (number): the status code to return to the front end
         """
         self.send_response(status)
-        self.send_header('Content-type', 'application/json')
-        self.send_header('Access-Control-Allow-Origin', '*')
+        self.send_header("Content-type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
 
     # Another method! This supports requests with the OPTIONS verb.
     def do_OPTIONS(self):
-        """Sets the options headers
-        """
+        """Sets the options headers"""
         self.send_response(200)
-        self.send_header('Access-Control-Allow-Origin', '*')
-        self.send_header('Access-Control-Allow-Methods',
-                         'GET, POST, PUT, DELETE')
-        self.send_header('Access-Control-Allow-Headers',
-                         'X-Requested-With, Content-Type, Accept')
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
+        self.send_header(
+            "Access-Control-Allow-Headers", "X-Requested-With, Content-Type, Accept"
+        )
         self.end_headers()
 
     def parse_url(self, path):
-        """Doc string
-        """
+        """Doc string"""
         # Just like splitting a string in JavaScript. If the
         # path is "/animals/1", the resulting list will
         # have "" at index 0, "animals" at index 1, and "1"
@@ -114,16 +107,11 @@ class HandleRequests(BaseHTTPRequestHandler):
     #     """
 
 
-
-
-
-
 # This function is not inside the class. It is the starting
 # point of this application.
 def main():
-    """Starts the server on port 8088 using the HandleRequests class
-    """
-    host = ''
+    """Starts the server on port 8088 using the HandleRequests class"""
+    host = ""
     port = 8088
     HTTPServer((host, port), HandleRequests).serve_forever()
 
