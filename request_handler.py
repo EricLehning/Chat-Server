@@ -4,6 +4,27 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 import os
 import openai
 
+# For potential Cors Issues
+import copy
+import json
+import urllib.request
+from http.server import BaseHTTPRequestHandler, HTTPServer
+
+# Define the proxy URL
+proxy_url = "http://localhost:8088"
+
+# Create a ProxyHandler object with the proxy URL
+proxy_handler = urllib.request.ProxyHandler({"http": proxy_url})
+
+# Create an opener object with the proxy handler
+opener = urllib.request.build_opener(proxy_handler)
+
+# Install the opener object as the default global opener
+urllib.request.install_opener(opener)
+
+# Rest of the code
+
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
@@ -29,24 +50,22 @@ class HandleRequests(BaseHTTPRequestHandler):
     # It handles any POST request.
     def do_POST(self):
         """Doc string"""
-        (resource, id) = self.parse_url(self.path)
+        self._set_headers(200)
+        content_len = int(self.headers.get("content-length", 0))
+        post_body = self.rfile.read(content_len)
+        post_body = json.loads(post_body)
 
+        (resource, id) = self.parse_url(self.path)
+        # What are the requirements on how we pass bodies to 3rd party api?
         if resource == "chat":
             response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=[
-                    {"role": "system", "content": "You are a chatbot"},
-                    {
-                        "role": "user",
-                        "content": "Why hasn't toilet paper changed in 100 years?",
-                    },
-                ],
+                model="gpt-3.5-turbo", messages=post_body
             )
 
         result = ""
-        for choice in response.choices:
-            result += choice.message.content
-        self._set_headers(200)
+        # for choice in response.choices:
+        #     result += choice.message.content
+
         self.wfile.write(json.dumps(result).encode())
 
         # Encode the new animal and send in response
@@ -65,8 +84,8 @@ class HandleRequests(BaseHTTPRequestHandler):
             status (number): the status code to return to the front end
         """
         self.send_response(status)
-        self.send_header("Content-type", "application/json")
         self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Content-type", "application/json")
         self.end_headers()
 
     # Another method! This supports requests with the OPTIONS verb.
