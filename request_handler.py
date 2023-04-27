@@ -58,15 +58,17 @@ class HandleRequests(BaseHTTPRequestHandler):
         (resource, id) = self.parse_url(self.path)
         # What are the requirements on how we pass bodies to 3rd party api?
         if resource == "chat":
+            print(post_body)
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo", messages=post_body
             )
-
-        result = ""
+        # completion = openai.ChatCompletion.create(model="gpt-3.5-turbo", messages=[{"role": "user", "content": "Hello world!"}])
+        # print(completion.choices[0].message.content)
+        # result = ""
         # for choice in response.choices:
         #     result += choice.message.content
 
-        self.wfile.write(json.dumps(result).encode())
+        self.wfile.write(json.dumps(response).encode())
 
         # Encode the new animal and send in response
 
