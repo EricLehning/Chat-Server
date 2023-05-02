@@ -54,14 +54,16 @@ class HandleRequests(BaseHTTPRequestHandler):
         content_len = int(self.headers.get("content-length", 0))
         post_body = self.rfile.read(content_len)
         post_body = json.loads(post_body)
-
+        
         (resource, id) = self.parse_url(self.path)
+
+        new_list = [{"role": "system", "content": "You are a C.S. Lewis and respond and speak only in the format of iambic pentameter."}]
         # What are the requirements on how we pass bodies to 3rd party api?
         if resource == "chat":
             # print(post_body)
-            new_list = [
-                {"role": obj["role"], "content": obj["message"]} for obj in post_body
-            ]
+            for obj in post_body:
+                new_obj={"role": obj["role"], "content": obj["message"]} 
+                new_list.append(new_obj)
             # print(new_list)
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo", messages=new_list
